@@ -1,51 +1,71 @@
 'use strict';
-require('./config/config');
-
 const _ = require('lodash');
 const bodyParser = require('body-parser');
-const { ObjectID } = require('mongodo');
+const mongoose = require('mongoose');
+const { ObjectID } = require('mongodb');
 
-let { Stream } = require('./models/streams');
+let Feed = require('./models/feeds');
 
 const express = require('express');
 const app = express();
 
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
+
+//Mlab Connection
+const mongodbUri ='mongodb://@ds211275.mlab.com:11275/streams-api';
+mongoose.connect(mongodbUri, {
+  useNewUrlParser: true,
+  auth: {
+    user: 'paul',
+    password: 'william1'
+  }
+});
+const conn = mongoose.connection;
+conn.on('error', console.error.bind(console, 'connection error:'));
+
+conn.once('open', () =>{
+ console.log('connected to database')
+});
 
 app.use(bodyParser.json());
 
-app.get("/streams", async (req, res) => {
+app.get("/", (req, res) => {
+  res.send('Welcome to the Feeds Api');
+});
+
+app.get("/feeds", async (req, res) => {
   try {
-    const streams = await Stream.find({});
-    res.send({streams});
+    const feeds = await Feed.find({});
+    res.send({feeds});
   } catch (err) {
     res.status(400).send(err);
   }
 });
 
 //Add new stream
-app.post("/streams", async (req, res) => {
+app.post("/feeds", async (req, res) => {
   try {
-    let stream = new Stream({
+    let feed = new Feed({
       title: req.body.title,
-      desc: req.body.desc
+      body: req.body.body,
+      author: req.body.author
     });
-    await stream.save();
-    res.send(stream);
+    await feed.save();
+    res.send(feed);
   } catch (err) {
     res.status(400).send(err);
   }
 });
 
 //Get stream by id
-app.get("/streams/:id", async (req, res ) => {
+app.get("/feeds/:id", async (req, res ) => {
   try {
     let id = req.params.id;
     if(!ObjectID.isValid(id)) {
       return res.status(404).send();
     };
-    const stream = await Stream.findOne({_id:id});
-    !stream ? console.log('Stream not found') : res.send({stream});
+    const feed = await Feed.findOne({_id:id});
+    !feed ? console.log('Feed not found') : res.send({feed});
 
   }catch (err) {
     res.status(400).send(err);
@@ -53,34 +73,34 @@ app.get("/streams/:id", async (req, res ) => {
 });
 
 //Update stream by id
-app.patch("/streams/:id", async (req, res) => {
+app.patch("/feeds/:id", async (req, res) => {
   try {
     let id = req.params.id;
-    let body = _.pick(req.body, ['title', 'desc']);
+    let body = _.pick(req.body, ['body']);
     if(!ObjectID.isValid(id)) {
       return res.status(404).send();
     };
-    const stream = await Stream.findOneAndUpdate({
+    const feed = await Feed.findOneAndUpdate({
       _id: id,
     }, {$set: body}, {new: true});
-    !stream ? res.status(404).send() : res.send({stream});
+    !feed ? res.status(404).send() : res.send({feed});
   } catch (err) {
     res.status(400).send(err);
   }
 });
 
 //Delete stream by id
-app.delete("/streams/:id", async (req, res) => {
+app.delete("/feeds/:id", async (req, res) => {
   const id = req.params.id;
   if(!ObjectID.isValid(id)) {
     return res.status(404).send();
   };
 
   try {
-    const stream = await Stream.findOneAndRemove({
+    const feed = await Feed.findOneAndRemove({
       _id: id,
     });
-    !stream ? res.status(404).send(): res.status(200).send({stream});
+    !feed ? res.status(404).send(): res.status(200).send({feed});
   } catch (err) {
     res.status(400).send(err);
   }
