@@ -4,7 +4,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const { ObjectID } = require('mongodb');
 
-let Feed = require('./models/feeds');
+const Feed = require('./models/feeds');
+const auth = require('./config/config');
 
 const express = require('express');
 const app = express();
@@ -15,10 +16,7 @@ const port = process.env.PORT || 3000;
 const mongodbUri ='mongodb://@ds211275.mlab.com:11275/streams-api';
 mongoose.connect(mongodbUri, {
   useNewUrlParser: true,
-  auth: {
-    user: 'paul',
-    password: 'william1'
-  }
+  auth,
 });
 const conn = mongoose.connection;
 conn.on('error', console.error.bind(console, 'connection error:'));
