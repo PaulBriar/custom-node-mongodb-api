@@ -8,9 +8,12 @@ const Feed = require('./models/feeds');
 const auth = require('./config/config');
 
 const express = require('express');
+const cors = require('cors');
 const app = express();
 
 const port = process.env.PORT || 3000;
+
+app.use(cors());
 
 //Mlab Connection
 const mongodbUri ='mongodb://@ds211275.mlab.com:11275/streams-api';
@@ -28,13 +31,13 @@ conn.once('open', () =>{
 app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
-  res.send('Welcome to the Feeds Api');
+  res.send('Welcome to the Feeds Api -- Go to /feeds for the json data');
 });
 
 app.get("/feeds", async (req, res) => {
   try {
     const feeds = await Feed.find({});
-    res.send({feeds});
+    res.json({feeds});
   } catch (err) {
     res.status(400).send(err);
   }
